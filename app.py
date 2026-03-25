@@ -65,13 +65,55 @@ st.divider()
 
 st.header("① Configuration des clients")
 
-config_defaut = json.dumps({
-    "clients": [
-        {"nom": "Client_1", "prefixes": ["87", "23", "19"]},
-        {"nom": "Client_2", "prefixes": ["08", "10", "51"]},
-        {"nom": "Client_3", "prefixes": ["12", "32", "45"]}
-    ]
-}, indent=2, ensure_ascii=False)
+config_defaut = json.dumps({    
+  "clients": [
+    {
+      "nom": "Client_JND",
+      "prefixes": ["87", "23", "19", "42", "43", "63"]
+    },
+    {
+      "nom": "Client_YC",
+      "prefixes": ["08", "10", "51", "52", "25", "39", "70", "90", "21", "58", "71", "89"]
+    },
+    {
+      "nom": "Client_SEE",
+      "prefixes": ["64", "65", "32"]
+    },
+    {
+      "nom": "Client_EGOROFF",
+      "prefixes": ["16", "79", "86"]
+    },
+    {
+      "nom": "Client_GSE",
+      "prefixes": ["38", "01", "26","07", "74", "73", "30", "34"]
+    },
+    {
+      "nom": "Client_RUDY",
+      "prefixes": ["40", "33", "47","24"]
+    },
+    {
+      "nom": "NORD",
+      "prefixes": ["62", "59", "80","02", "60"]
+    },
+    {
+      "nom": "LOIRE",
+      "prefixes": ["53", "72", "44","49", "85"]
+    },
+    {
+      "nom": "BRETAGNE",
+      "prefixes": ["22", "29", "56","35"]
+    },
+    {
+      "nom": "LORRAINE",
+      "prefixes": ["54", "57", "55","88"]
+    },
+    {
+      "nom": "ALSACE",
+      "prefixes": ["67", "68"]
+    }
+  ]
+}
+, indent=2, ensure_ascii=False)
 
 config_json = st.text_area(
     "Colle ou modifie ta configuration JSON :",
