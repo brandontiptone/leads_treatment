@@ -81,11 +81,11 @@ config_defaut = json.dumps({
     },
     {
       "nom": "Client_GSE",
-      "prefixes": ["38", "01", "26","07", "74", "73", "30", "34"]
+      "prefixes": ["38", "01", "74", "73"]
     },
     {
-      "nom": "Client_RUDY",
-      "prefixes": ["40", "33", "47","24"]
+      "nom": "Client_JEFF",
+      "prefixes": ["28", "45", "41","36", "37", "18"]
     },
     {
       "nom": "Client_ElieYann_YE",
@@ -93,23 +93,32 @@ config_defaut = json.dumps({
     },
     {
       "nom": "Client_OR",
-      "prefixes": ["76", "27", "44","49", "79","85", "53","72", "35","33", "40","81", "82","12"]
+      "prefixes": ["44","49", "79","85", "53","72", "35","33", "40","81", "82","12"]
     },
+    {
+      "nom": "Client_DN_ECO",
+      "prefixes": ["69", "26", "07"]
+    },  
     {
       "nom": "NORD",
       "prefixes": ["62", "59", "80","02", "60"]
     },
     {
-      "nom": "LOIRE",
-      "prefixes": ["53", "72", "44","49", "85"]
-    },
-    {
       "nom": "BRETAGNE",
-      "prefixes": ["22", "29", "56","35"]
+      "prefixes": ["22", "29", "56"]
     },
     {
       "nom": "LORRAINE",
       "prefixes": ["54", "57", "55","88"]
+    },
+
+    {
+      "nom": "HAUTE_NORMANDIE",
+      "prefixes": ["76", "27"]
+    },
+    {
+      "nom": "IDF",
+      "prefixes": ["77", "78", "91","92", "93", "94", "95"]
     },
     {
       "nom": "ALSACE",
