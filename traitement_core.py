@@ -13,24 +13,25 @@ MAPPING_COLONNES = {
         "created_time", "date_created", "creation_date", "date", "timestamp",
         "date de création", "date_soumission", "submit_time"
     ],
-    "Nom Prénom":  [
-        "full_name", "Nom Prénom", "nom_complet","nom complet", "last_name", "nom", "name", "surname", "famille"
+    "Nom Prénom": [
+        "full_name", "Nom Prénom", "nom_complet", "nom complet", "last_name", "nom", "name", "surname", "famille"
     ],
-    "Email":       [
+    "Email": [
         "email", "e-mail", "Email", "mail", "email_address", "adresse_email", "adresse mail",
         "adresse e-mail"
     ],
     "Code Postal": [
-        "code postal", "Code Postal", "code_postal", "post_code", "zip_code", "postal_code", "code_postal",
+        "code postal", "Code Postal", "code_postal", "post_code", "zip_code", "postal_code",
         "cp", "postcode", "zip", "codepostal"
     ],
-    "Téléphone":   [
-        "numero de telephone", "Téléphone" ,"numéro_de_téléphone", "numéro de téléphone", "phone_number", "phone",
+    "Téléphone": [
+        "numero de telephone", "Téléphone", "numéro_de_téléphone", "numéro de téléphone", "phone_number", "phone",
         "telephone", "tel", "mobile", "portable"
-    ]
+    ],
+    # Statut Propriété détecté dynamiquement ligne par ligne (voir detecter_statut_propriete)
 }
 
-COLONNES_SORTIE = ["Date de création", "Nom Prénom", "Email", "Téléphone", "Code Postal"]
+COLONNES_SORTIE = ["Date de création", "Nom Prénom", "Email", "Téléphone", "Code Postal", "Statut Propriété"]
 
 
 def lire_csv_depuis_bytes(file_bytes):
@@ -63,6 +64,22 @@ def construire_mapping(colonnes):
     return mapping
 
 
+def detecter_statut_propriete(row):
+    """
+    Scanne toutes les cellules de la ligne.
+    Si une cellule contient 'propriétaire' ou 'locataire', retourne cette valeur.
+    Sinon retourne une chaîne vide.
+    """
+    mots_cles = ["propriétaire", "proprietaire", "locataire"]
+    for val in row.values:
+        if pd.notna(val):
+            v = str(val).strip().lower()
+            for mot in mots_cles:
+                if mot in v:
+                    return str(val).strip()
+    return ""
+
+
 def normaliser_lead(row, mapping):
     def get(champ):
         col = mapping.get(champ)
@@ -76,7 +93,10 @@ def normaliser_lead(row, mapping):
                     v = v[2:].strip()
                 return v
         return ""
-    return {champ: get(champ) for champ in COLONNES_SORTIE}
+
+    lead = {champ: get(champ) for champ in COLONNES_SORTIE}
+    lead["Statut Propriété"] = detecter_statut_propriete(row)
+    return lead
 
 
 def classifier_lead(code_postal, clients):
