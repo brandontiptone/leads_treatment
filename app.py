@@ -84,6 +84,10 @@ config_defaut = json.dumps({
       "prefixes": ["81", "82", "31", "34", "11"]
     },
     {
+      "nom": "Client_ISL",
+      "prefixes": ["44", "49", "53", "72", "85"]
+    },      
+    {
       "nom": "NORD",
       "prefixes": ["62", "59", "80","02", "60"]
     },
