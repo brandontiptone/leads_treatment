@@ -113,7 +113,7 @@ config_defaut = json.dumps({
     },
     {
       "nom": "CENTRE",
-      "prefixes": ["28", "18", 36", "37", "41", "45"]
+      "prefixes": ["28", "18", "36", "37", "41", "45"]
     }, 
     {
       "nom": "ALSACE",
