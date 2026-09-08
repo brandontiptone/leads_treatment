@@ -79,11 +79,14 @@ if "timestamp" not in st.session_state:
 st.header("① Configuration des clients")
 
 config_defaut = json.dumps({
-    "clients": [
-        {"nom": "Client_1", "prefixes": ["87", "23", "19"]},
-        {"nom": "Client_2", "prefixes": ["08", "10", "51"]},
-        {"nom": "Client_3", "prefixes": ["12", "32", "45"]}
-    ]
+  "clients": [
+    {"nom": "SEE",        "prefixes": ["46","47","12","81","82"]},
+    {"nom": "YC",         "prefixes": ["08","10","51","52","25","39","70","90","21","58","71","89"]},
+    {"nom": "JND",        "prefixes": ["03","63","42","43"]},
+    {"nom": "BE_LEADS",   "prefixes": ["27","76"]},
+    {"nom": "SD",         "prefixes": ["14","27","50","61","01","38"]},
+    {"nom": "PHOTO_CLIM", "prefixes": ["27","76","89","58","72","53","18","41","60","80","02","28","45"]}
+  ]
 }, indent=2, ensure_ascii=False)
 
 config_json = st.text_area(
