@@ -2,11 +2,11 @@
 Fonctions métier de traitement des leads Meta.
 Utilisé par app.py (Streamlit).
 """
- 
+
 import io
 import json
 import pandas as pd
- 
+
 MAPPING_COLONNES = {
     "Date de création": [
         "created_time", "date_created", "creation_date", "date", "timestamp",
@@ -30,10 +30,10 @@ MAPPING_COLONNES = {
         "telephone", "tel", "mobile", "portable"
     ]
 }
- 
+
 COLONNES_SORTIE = ["Date de création", "Nom Prénom", "Email", "Téléphone", "Code Postal", "Statut Propriété"]
- 
- 
+
+
 def lire_csv_depuis_bytes(file_bytes):
     for encoding in ["utf-16", "utf-16-le", "utf-16-be", "utf-8", "utf-8-sig", "latin-1", "cp1252"]:
         for sep in [",", ";", "\t"]:
@@ -44,16 +44,16 @@ def lire_csv_depuis_bytes(file_bytes):
             except Exception:
                 continue
     raise ValueError("Impossible de lire le fichier.")
- 
- 
+
+
 def detecter_colonne(colonnes_dispo, candidats):
     colonnes_lower = {c.lower().strip(): c for c in colonnes_dispo}
     for candidat in candidats:
         if candidat.lower() in colonnes_lower:
             return colonnes_lower[candidat.lower()]
     return None
- 
- 
+
+
 def construire_mapping(colonnes):
     mapping = {}
     for champ, candidats in MAPPING_COLONNES.items():
@@ -61,8 +61,8 @@ def construire_mapping(colonnes):
         if col_trouvee:
             mapping[champ] = col_trouvee
     return mapping
- 
- 
+
+
 def detecter_statut_propriete(row):
     """
     Scanne toutes les cellules de la ligne.
@@ -77,8 +77,8 @@ def detecter_statut_propriete(row):
                 if mot in v:
                     return str(val).strip()
     return ""
- 
- 
+
+
 def normaliser_lead(row, mapping):
     def get(champ):
         col = mapping.get(champ)
@@ -92,7 +92,7 @@ def normaliser_lead(row, mapping):
                     v = v[2:].strip()
                 return v
         return ""
- 
+
     return {
         "Date de création": get("Date de création"),
         "Nom Prénom":       get("Nom Prénom"),
@@ -101,8 +101,8 @@ def normaliser_lead(row, mapping):
         "Code Postal":      get("Code Postal"),
         "Statut Propriété": detecter_statut_propriete(row)
     }
- 
- 
+
+
 def classifier_lead(code_postal, clients):
     cp = str(code_postal).strip()
     if cp.startswith("z:"):
@@ -112,26 +112,26 @@ def classifier_lead(code_postal, clients):
             if cp.startswith(str(prefix)):
                 return client["nom"]
     return "Hors_Zone"
- 
- 
+
+
 def dedoublonner(leads):
     vus_email, vus_tel = {}, {}
     doublons = []
     propres = {cle: [] for cle in leads}
- 
+
     for cle, data in leads.items():
         for lead in data:
             email = lead.get("Email", "").lower().strip()
             tel   = lead.get("Téléphone", "").strip()
             doublon, raison = False, ""
- 
+
             if email and email in vus_email:
                 doublon = True
                 raison  = f"Email en double : {email} (déjà vu dans {vus_email[email]})"
             elif tel and tel in vus_tel:
                 doublon = True
                 raison  = f"Téléphone en double : {tel} (déjà vu dans {vus_tel[tel]})"
- 
+
             if doublon:
                 lead_d = dict(lead)
                 lead_d["Raison"] = raison
@@ -141,10 +141,10 @@ def dedoublonner(leads):
                 propres[cle].append(lead)
                 if email: vus_email[email] = cle
                 if tel:   vus_tel[tel] = cle
- 
+
     return propres, doublons
- 
- 
+
+
 def valider_config(config_json_str):
     config = json.loads(config_json_str)
     clients = config.get("clients", [])
@@ -154,52 +154,70 @@ def valider_config(config_json_str):
         if "nom" not in c or "prefixes" not in c:
             raise ValueError(f"Client mal configuré : {c}")
     return clients
- 
- 
+
+
 def traiter_fichiers(fichiers_bytes, clients, log_callback=None):
     leads = {c["nom"]: [] for c in clients}
     leads["Hors_Zone"] = []
     logs = []
- 
+
     def log(msg, level="INFO"):
         logs.append((level, msg))
         if log_callback:
             log_callback(level, msg)
- 
+
     for nom_fichier, file_bytes in fichiers_bytes:
         log(f"Lecture : {nom_fichier}")
         try:
             df, encoding, sep = lire_csv_depuis_bytes(file_bytes)
             log(f"  Encodage : {encoding} | Séparateur : '{sep}'", "DEBUG")
             mapping = construire_mapping(df.columns.tolist())
- 
+
             champs_manquants = [c for c in MAPPING_COLONNES if c not in mapping]
             if champs_manquants:
                 log(f"  Colonnes non détectées : {champs_manquants}", "WARNING")
- 
+
             for _, row in df.iterrows():
                 lead = normaliser_lead(row, mapping)
                 cible = classifier_lead(lead["Code Postal"], clients)
                 leads[cible].append(lead)
- 
+
             log(f"  ✓ {len(df)} leads traités")
         except Exception as e:
             log(f"  ✗ Erreur : {e}", "ERROR")
- 
+
     # Dédoublonnage
     leads, doublons = dedoublonner(leads)
     log(f"Dédoublonnage : {len(doublons)} doublon(s) détecté(s)", "WARNING" if doublons else "INFO")
- 
+
     # Construction des DataFrames
     resultats = {}
+    resultats_prop = {}   # propriétaires + statut non trouvé
+    resultats_loc  = {}   # locataires uniquement
+
     for cle, data in leads.items():
-        resultats[cle] = pd.DataFrame(data, columns=COLONNES_SORTIE)
- 
+        df_full = pd.DataFrame(data, columns=COLONNES_SORTIE)
+        resultats[cle] = df_full
+
+        # Séparation propriétaires / locataires
+        if "Statut Propriété" in df_full.columns:
+            masque_loc  = df_full["Statut Propriété"].str.lower().str.contains("locataire", na=False)
+            masque_prop = ~masque_loc  # propriétaires + vide → fichier propriétaires
+            resultats_prop[cle] = df_full[masque_prop].reset_index(drop=True)
+            resultats_loc[cle]  = df_full[masque_loc].reset_index(drop=True)
+        else:
+            resultats_prop[cle] = df_full
+            resultats_loc[cle]  = pd.DataFrame(columns=COLONNES_SORTIE)
+
+        nb_prop = len(resultats_prop[cle])
+        nb_loc  = len(resultats_loc[cle])
+        log(f"  {cle} → {nb_prop} propriétaires/inconnus | {nb_loc} locataires", "DEBUG")
+
     doublons_df = pd.DataFrame(
         doublons,
         columns=COLONNES_SORTIE + ["Client origine", "Raison"]
     ) if doublons else pd.DataFrame()
- 
+
     # Global
     tous = []
     for cle, data in leads.items():
@@ -208,10 +226,9 @@ def traiter_fichiers(fichiers_bytes, clients, log_callback=None):
             l["Client"] = cle
             tous.append(l)
     global_df = pd.DataFrame(tous, columns=["Client"] + COLONNES_SORTIE)
- 
-    return resultats, doublons_df, global_df, logs
- 
- 
+
+    return resultats, resultats_prop, resultats_loc, doublons_df, global_df, logs
+
+
 def df_to_csv_bytes(df):
     return df.to_csv(index=False, encoding="utf-8-sig", sep=";").encode("utf-8-sig")
- 
